@@ -74,7 +74,7 @@ class Logger:
         self.save_model(model, "tmp_model")
 
 
-    def plot_reward(self, sliding_window=10, show=False, save=False):
+    def plot_reward(self, sliding_window=10, show=False, save=False, fn = "rewards.png" ):
         #rewards = self._moving_average(self._rewards, sliding_window)
         rewards = self._rewards
         plt.plot(range(len(rewards)), rewards, label= self.save_result_path )
@@ -84,12 +84,13 @@ class Logger:
         plt.legend()
 
         if save:
-            plt.savefig(os.path.join(self.save_result_path, "rewards.png"))
+            plt.savefig(os.path.join(self.save_result_path, fn ))
 
         if show:
             plt.show()
+        plt.close()
 
-    def plot_loss(self, sliding_window=10, show=False, save=False):
+    def plot_loss(self, sliding_window=10, show=False, save=False, fn = "losses.png" ):
         #rewards = self._moving_average(self._rewards, sliding_window)
         losses = self._losses
         plt.plot(range(len(losses)), losses, label= self.save_result_path )
@@ -99,10 +100,11 @@ class Logger:
         plt.legend()
 
         if save:
-            plt.savefig(os.path.join(self.save_result_path, "losses.png"))
+            plt.savefig(os.path.join(self.save_result_path, fn))
 
         if show:
             plt.show()
+        plt.close()
 
     @staticmethod
     def _moving_average(interval, window_size):

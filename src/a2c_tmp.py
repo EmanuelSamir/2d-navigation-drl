@@ -30,9 +30,9 @@ action_dim = 4
 #action_dim = env.action_space.n
 #actions = None
 
-agent = A2CAgent(env, state_dim, action_dim, actions, 100, load_actor_path= '../checkpoints/A2C/actor/tmp_model.pth', load_critic_path= '../checkpoints/A2C/critic/tmp_model.pth')
+agent = A2CAgent(env, state_dim, action_dim, actions, 500, load_actor_path='../checkpoints/A2C/actor/tmp_model.pth',load_critic_path='../checkpoints/A2C/critic/tmp_model.pth')
 
-#agent.train()  
+agent.train()  
 
 agent.test()
 

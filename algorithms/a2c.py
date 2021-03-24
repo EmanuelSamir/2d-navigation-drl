@@ -15,6 +15,8 @@ class A2CAgent:
                 gamma = 0.999,
                 load_actor_path = None,
                 load_critic_path = None):
+
+        self.device = torch.device('cpu')#torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.env = env
         self.n_episodes = n_episodes
         self.gamma = gamma
@@ -23,8 +25,8 @@ class A2CAgent:
         self.actions = actions
 
         # Models
-        self.actor = Actor(state_dim, action_dim)
-        self.critic = Critic(state_dim)
+        self.actor = Actor(state_dim, action_dim).to(self.device)
+        self.critic = Critic(state_dim).to(self.device)
         self.load_models(load_actor_path, load_critic_path)
 
         # Optimizers
@@ -63,12 +65,12 @@ class A2CAgent:
                 
                 while not is_done:
                     # Feed Policy network
-                    probs = self.actor(t(state))
+                    probs = self.actor(t(state).to(self.device))
 
                     # Choose sample accoding to policy
                     action_dist = torch.distributions.Categorical(probs = probs)
                     action = action_dist.sample()
-                    action_ix = action.detach().data.numpy()
+                    action_ix = action.detach().data
 
                     # Update env
                     if self.actions:
@@ -78,7 +80,7 @@ class A2CAgent:
 
                     
                     # Advantage 
-                    advantage = reward + (1-is_done)* self.gamma * self.critic(t(next_state)) - self.critic(t(state))
+                    advantage = reward + (1-is_done)* self.gamma * self.critic(t(next_state).to(self.device)) - self.critic(t(state).to(self.device))
                     
                     # Update models
                     critic_loss, actor_loss = self.update_models(advantage, action_dist, action)
@@ -128,12 +130,12 @@ class A2CAgent:
 
         while not is_done:
             # Feed Policy network
-            probs = self.actor(t(state))
+            probs = self.actor(t(state).to(self.device))
 
             # Choose sample accoding to policy
             action_dist = torch.distributions.Categorical(probs = probs)
             action = action_dist.sample()
-            action_ix = action.detach().data.numpy()
+            action_ix = action.detach().data
 
             if self.actions:
                 next_state, reward, is_done, info = self.env.step(self.actions[action_ix])
