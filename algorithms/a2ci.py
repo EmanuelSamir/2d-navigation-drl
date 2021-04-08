@@ -3,7 +3,7 @@ import torch
 import gym
 import time
 import numpy as np
-from models.a2ci import ActorCritic
+from models.a2ci_lstm import ActorCritic
 from tqdm import tqdm
 from src.utils import *
 from src.logger import Logger

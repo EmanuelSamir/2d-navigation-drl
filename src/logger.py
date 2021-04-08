@@ -27,7 +27,7 @@ class Logger:
         self._losses.append(loss)
         self.episode += 1
 
-        if save_best and reward > self.best_reward:
+        if save_best and reward >= self.best_reward:
             self.best_reward = reward
             if self.episode != 0:
                 self.save_model(model, "best_model_e{}_r{}".format(self.episode, reward))
