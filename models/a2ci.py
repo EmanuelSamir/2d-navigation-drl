@@ -73,7 +73,7 @@ class ActorCritic(nn.Module):
 
         self.net_actor = nn.Sequential(
                             nn.Linear(g2,g3),                        nn.ReLU(),
-                            nn.Linear(g3,action_dim),                nn.Softmax(0)
+                            nn.Linear(g3,action_dim),                nn.Softmax()
                             )
 
         self.net_critic = nn.Sequential(

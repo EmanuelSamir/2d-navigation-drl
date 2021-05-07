@@ -48,11 +48,30 @@ def preprocess_transition(data, force_to_float = False):
     # list -> 1 list   len(lst), 1
     # array -> 1, array shape[0], 1
 
+class RunningMeanStdWelford(object):
+    # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
+    def __init__(self, input_size=()):
+        self.mean = np.zeros(input_size, 'float32')
+        self.var = np.ones(input_size, 'float32')
+        self.M2 = np.ones(input_size, 'float32')
+        self.count = 0
+
+    def update(self, xt):
+        x = xt.numpy()
+        self.count += 1
+        
+        delta = x - self.mean
+        self.mean += delta / self.count
+        delta2 = x - self.mean
+        self.M2 += delta * delta2
+        res = (x - self.mean) /  (self.M2 / (self.count ) )**(0.5)
+        return torch.from_numpy(res).float()
+
 class RunningMeanStd(object):
     # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
-    def __init__(self, shape=()):
-        self.mean = np.zeros(shape, 'float32')
-        self.var = np.ones(shape, 'float32')
+    def __init__(self, input_size=()):
+        self.mean = np.zeros(input_size, 'float32')
+        self.var = np.ones(input_size, 'float32')
         self.count = 0
 
     def update(self, xt):
@@ -84,34 +103,52 @@ class RunningMeanStd(object):
         self.mean = new_mean
         self.var = new_var
         self.count = new_count
+        new_mean = self.mean + delta * batch_count / tot_count
+        m_a = self.var * (self.count)
+        m_b = batch_var * (batch_count)
+        M2 = m_a + m_b + np.square(delta) * self.count * batch_count / (self.count + batch_count)
+        new_var = M2 / (self.count + batch_count)
+
+        new_count = batch_count + self.count
+
+        self.mean = new_mean
+        self.var = new_var
+        self.count = new_count
+
 
 class RunningMeanStdOne:
     # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-    def __init__(self):
+    def __init__(self, input_size):
+        self.input_size = input_size
         self.mean = 0.
         self.var = 0.
-        self.capacity = 1000
-
+        self.capacity = 150
         self.memory = deque(maxlen = self.capacity)
-        self.memory.append(0.)
+        
+    def fill(self, item = None):
+        for i in range(self.capacity):
+            if item is not None:
+                x = item.numpy() + 1*np.random.randn(self.input_size)
+                self.memory.append(x)
+            else:
+                x = np.random.randn(self.input_size)
+                self.memory.append(x)
 
     def update(self, xt):
         x = xt.numpy()
         self.memory.append(x)
         self.calculate()
-
-        #xm = self.mean + (x - self.mean)/self.count
-        #xv = self.var + ( (x - self.mean)*(x - xm) - self.var)/self.count
-
-        res =  1*((xt - self.mean) / self.var).float() - 1
-        return res
+        
+        res =  ((x - self.mean) / self.std)
+        #res = np.array([res])
+        return torch.from_numpy(res).float()
 
     def calculate(self):
         self.mean = np.mean(self.memory, axis = 0)
-        self.var = np.var(self.memory, axis = 0)
+        self.std = np.std(self.memory, axis = 0)
 
     def reset(self):
-        self.memory = [0.]
+        self.memory = deque(maxlen = self.capacity)
 
 class RunningFixed:
     def __init__(self):
