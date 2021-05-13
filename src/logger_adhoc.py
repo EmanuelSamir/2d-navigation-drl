@@ -241,7 +241,8 @@ class Logger:
 
 
     def exception_arisen(self, episode, model, optimizer):
-        self.save_model(episode, model, optimizer, "tmp_model")
+        fn = os.path.join(self.save_model_path, 'tmp_model')
+        self.save_model(episode, model, optimizer, fn)
         self.close()
 
     def report(self, df):

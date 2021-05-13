@@ -60,8 +60,8 @@ class A2CiLSTMRNDPNAgent:
 
         # Models
         self.actor_critic = ActorCritic(state_dim, action_dim)
-        self.load_models(load_model_fn)
         self.actor_critic_optimizer = torch.optim.Adam(self.actor_critic.parameters(), lr = self.lr)
+        self.load_models(load_model_fn)
 
         # RND - Curious Module
         self.rnd = RND(state_dim=288) # 256 + 32
@@ -76,7 +76,7 @@ class A2CiLSTMRNDPNAgent:
                                 self.save_checkpoints,
                                 self.checkpoint_every)
 
-        self.logger_special = LoggerSpecial("A2CiLSTMRNDPN")
+        # self.logger_special = LoggerSpecial("A2CiLSTMRNDPN")
 
 
     def load_models(self, model_fn = None):
@@ -86,6 +86,7 @@ class A2CiLSTMRNDPNAgent:
                 model_path = os.path.join("../checkpoints", "A2CiLSTMRNDPN", model_fn)
                 checkpoint = torch.load(model_path)
                 self.actor_critic.load_state_dict(checkpoint["actor_critic_state_dict"])
+                self.actor_critic_optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
             except:
                 raise Exception("Model filename is incorrect")
 
@@ -104,7 +105,7 @@ class A2CiLSTMRNDPNAgent:
                                             self.rnd,
                                             self.actions)
 
-        self.logger_special.set_description(comment)
+        # self.logger_special.set_description(comment)
 
         try:
             for episode in range(self.n_episodes):
@@ -168,7 +169,7 @@ class A2CiLSTMRNDPNAgent:
                                             ent_loss,
                                             pi_loss)
 
-                    self.logger_special.update(steps, self.features_ns.tolist())
+                    # self.logger_special.update(steps, self.features_ns.tolist())
 
                     # Env update
                     state = next_state
@@ -181,7 +182,7 @@ class A2CiLSTMRNDPNAgent:
                 self.rnd.reset()
                 if not self.trial:
                     self.logger.consolidate(steps, self.episode, self.actor_critic, self.actor_critic_optimizer, self.rnd)
-                self.logger_special.consolidate(episode)
+                # self.logger_special.consolidate(episode)
                 pbar.update()
             
             if not self.trial:

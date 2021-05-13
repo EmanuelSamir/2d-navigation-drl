@@ -27,7 +27,7 @@ actions =       [
 action_dim = 3
 
 #lr_lst = [1e-3, 1e-4, 1e-5]
-lr_lst = [5e-5]
+lr_lst = [1e-4]
 gamma_lst = [0.999]
 
 # Mejor caso fue para 0.99, deberia ser 0.999
@@ -37,9 +37,9 @@ trained = True
 if trained:
     for lr in lr_lst:
         for gamma in gamma_lst:
-            fn = '_0512_07-57-12/e=1950_ri=0_re=-22.0_steps=202.pth'
-            agent = A2CiLSTMRNDPNAgent(env, state_dim, action_dim, actions, 50, lr = lr, gamma=gamma, intrinsic_set=False, load_model_fn=fn, trial = True)
-            agent.train('Trial of _0512_07-57-12/e=1950_ri=0_re=-22.0_steps=202.pth for collecting special data. RND')
+            #fn = '_0513_01-26-37/best_e=2978_ri=0_re=101.0_steps=202.pth'
+            agent = A2CiLSTMRNDPNAgent(env, state_dim, action_dim, actions, 1000, lr = lr, gamma=gamma, intrinsic_set=False)#, load_model_fn = fn)
+            agent.train('Changed again. Changed env steps from 200 to 400. Changed, death to -100. Changed be alive to 0.5. Changed time no motion to 8.')
 
 else:
     path = '../checkpoints/A2CiLSTMRNDPN/model/'
