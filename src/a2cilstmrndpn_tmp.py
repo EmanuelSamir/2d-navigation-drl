@@ -26,25 +26,20 @@ actions =       [
                 ]
 action_dim = 3
 
-lr_lst = [1e-3, 1e-4, 1e-5]
+#lr_lst = [1e-3, 1e-4, 1e-5]
+lr_lst = [5e-5]
+gamma_lst = [0.999]
+
+# Mejor caso fue para 0.99, deberia ser 0.999
 
 trained = True
-show = False
-save = True
+
 if trained:
     for lr in lr_lst:
-        #for (lr, rnd_i) in [(i, j) for i in lr_lst for j in rnd_type]:
-        #print(lr, rnd_i)
-        #path = '../checkpoints/A2CiLSTMRNDPN/model/'
-        #fn = path + 'tmp_model.pth'
-
-        agent = A2CiLSTMRNDPNAgent(env, state_dim, action_dim, actions, 1500, lr = lr)
-        agent.train()  
-
-        #agent.test()
-        #agent.actor_critic_logger.plot_reward(show = show, save = save, fn = 'rewards_lr_no_ri_{}.png'.format(lr))
-        #agent.actor_critic_logger.plot_loss(show = show, save = save, fn = 'losses_lr_no_ri_{}.png'.format(lr))
-        #agent.rnd_logger.plot_reward(show = show, save = save, fn = 'rewards_lr_exp_12_int{}.png'.format(lr))
+        for gamma in gamma_lst:
+            fn = '_0512_07-57-12/e=1950_ri=0_re=-22.0_steps=202.pth'
+            agent = A2CiLSTMRNDPNAgent(env, state_dim, action_dim, actions, 50, lr = lr, gamma=gamma, intrinsic_set=False, load_model_fn=fn, trial = True)
+            agent.train('Trial of _0512_07-57-12/e=1950_ri=0_re=-22.0_steps=202.pth for collecting special data. RND')
 
 else:
     path = '../checkpoints/A2CiLSTMRNDPN/model/'

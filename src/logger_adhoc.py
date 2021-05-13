@@ -12,9 +12,11 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 class Logger:
-    def __init__(self, algorithm, name = 'default', save_best
-                    save_checkpoints
-                    checkpoint_every):
+    def __init__(self, algorithm, 
+                    save_best,
+                    save_checkpoints,
+                    checkpoint_every,
+                    name = 'default'):
 
         # tmp option in case it is only test
         ## Description
@@ -43,15 +45,6 @@ class Logger:
         ### Losses: Histograms
         ## Results
         ### Plots Accumulative
-        
-
-        ### 
-        # torch.save({
-        #     'epoch': EPOCH,
-        #     'model_state_dict': net.state_dict(),
-        #     'optimizer_state_dict': optimizer.state_dict(),
-        #     'loss': LOSS,
-        #     }, PATH)
         
         # Logger parameters
         self.save_best = save_best 
@@ -97,7 +90,7 @@ class Logger:
         self.save_log_path = os.path.join("../log", algorithm, fn_date)
         create_dir(self.save_log_path)
 
-        self.tb = SummaryWriter(log_dir = os.path.join(self.save_log_path + 'log'))
+        self.tb = SummaryWriter(log_dir = os.path.join(self.save_log_path, 'log'))
 
         self.episode = 0
         self.steps = 0
@@ -119,7 +112,7 @@ class Logger:
                              actions):
 
         description = {
-            'comment': comment
+            'comment': comment,
             'lr': lr,
             'lr_rnd': lr_rnd,
             'zeta': zeta,
@@ -128,13 +121,13 @@ class Logger:
             'gamma': gamma,
             'actor_critic_graph' : model.state_dict(),
             'rnd_graph' : rnd.state_dict(),
-            'actions': actions,
-            'date':  datetime.now().strftime("%d%m%Y_%H-%M-%S"),
+            'actions': actions, 
+            'date':  datetime.now().strftime("%d%m%Y_%H-%M-%S")
             #'old': old_fn
           }
 
 
-        fn = os.path.join(self.save_description_path, 'description', '.pth' )
+        fn = os.path.join(self.save_description_path, 'description.pth' )
         torch.save(description, fn)
 
 
@@ -154,7 +147,7 @@ class Logger:
         self._policy_losses.append(policy_loss)
 
 
-    def consolidate(self, steps, episode, model, rnd):
+    def consolidate(self, steps, episode, model, optimizer, rnd):
         self.episode = episode
         self.steps = steps
         # Data
@@ -167,18 +160,20 @@ class Logger:
         
 
         # Log
-        if self.save_checkpoints and self.episode % checkpoint_every == 0 and self.episode != 0:
+        if self.save_checkpoints and self.episode % self.checkpoint_every == 0 and self.episode != 0:
             self.save_data(self.episode, model, rnd)
 
         # Checkpoints
-        if self.save_checkpoints and self.episode % checkpoint_every == 0 and self.episode != 0:
+        if self.save_checkpoints and self.episode % self.checkpoint_every == 0 and self.episode != 0:
             fn = "e={}_ri={}_re={}_steps={}.pth".format(self.episode, 
                                                         np.sum(self._intrinsic_rewards), 
                                                         np.sum(self._extrinsic_rewards),
                                                         self.steps)
 
-            self.save_model(model, optimizer, fn, self.episode)
-            self.save_data("best_losses_e{}_r{}".format(self.episode, reward) , "best_rewards_e{}_r{}".format(self.episode, reward))
+            checkpoint_path = os.path.join( self.save_model_path, fn)
+
+            self.save_model(self.episode, model, optimizer, checkpoint_path )
+            self.save_data(self.episode, model, rnd)
         
         reward = np.sum(self._intrinsic_rewards) + np.sum(self._extrinsic_rewards)
 
@@ -190,7 +185,9 @@ class Logger:
                                                         np.sum(self._extrinsic_rewards),
                                                         self.steps)
 
-                self.save_model(model, optimizer, fn, self.episode)
+                checkpoint_path = os.path.join( self.save_model_path, fn)
+
+                self.save_model(self.episode, model, optimizer, checkpoint_path)
 
         # Flush
         self._actions = []
@@ -201,7 +198,7 @@ class Logger:
         self._policy_losses = []     
 
                 
-    def save_model(self, model, optimizer, fn_model, episode):
+    def save_model(self, episode, model, optimizer, fn_model):
         if not fn_model.endswith(".pth"):
             fn_model += ".pth"
 
@@ -213,13 +210,13 @@ class Logger:
 
         torch.save(checkpoint, fn_model)
 
-    def save_data(self, model, rnd, episode):
-        self.tb.add_histogram('actions', torch.stack(self._actions), episode)
+    def save_data(self, episode, model, rnd):
+        self.tb.add_histogram('actions', torch.tensor(self._actions), episode)
         self.tb.add_histogram('policy_loss', torch.stack(self._policy_losses), episode)
         self.tb.add_histogram('entropy_loss', torch.stack(self._entropy_losses), episode)
         self.tb.add_histogram('value_loss', torch.stack(self._value_losses), episode)
         self.tb.add_histogram('intrinsic_reward', torch.stack(self._intrinsic_rewards), episode)
-        self.tb.add_histogram('extrinsic_reward', torch.stack(self._extrinsic_rewards), episode)
+        self.tb.add_histogram('extrinsic_reward', torch.tensor(self._extrinsic_rewards), episode)
         for name, weight in model.named_parameters():
             self.tb.add_histogram(name, weight, episode)
 
@@ -243,12 +240,12 @@ class Logger:
         self.tb.close()
 
 
-    def exception_arisen(self, model, optimizer, episode):
-        self.save_model(model, optimizer, "tmp_model", episode)
+    def exception_arisen(self, episode, model, optimizer):
+        self.save_model(episode, model, optimizer, "tmp_model")
         self.close()
 
     def report(self, df):
-        fig, axes = plt.subplots(nrows=3, ncols=2, figsize=(10,15))
+        fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(15,10))
         df.plot(subplots=True, ax=axes)
 
         fn = os.path.join(self.save_result_path, 'results')

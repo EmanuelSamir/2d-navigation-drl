@@ -111,52 +111,30 @@ class ActorCritic(nn.Module):
 
 
 class RND(nn.Module):
-    def __init__(self, state_dim = 16, k = 8):
+    def __init__(self, state_dim = 16, k = 16):
         super(RND, self).__init__()      
         self.first = True
-        # f1 = state_dim
-        # f2 = 256
-        # f3 = 128
-        # f4 = 64
-        # f5 = 64
-
-
-        # self.target =   nn.Sequential(
-        #                     nn.Linear(f1, f2),                   nn.ReLU(),
-        #                     nn.Linear(f2, f3),                   nn.ReLU(),
-        #                     nn.Linear(f3, f4),                   nn.ReLU(),
-        #                     nn.Linear(f4, f5),                   nn.ReLU(),
-        #                     nn.Linear(f5, k),
-        #                     )  
-
-        # self.predictor = nn.Sequential(
-        #                     nn.Linear(f1, f2),                   nn.ReLU(),
-        #                     nn.Linear(f2, f3),                   nn.ReLU(),
-        #                     nn.Linear(f3, f4),                   nn.ReLU(),
-        #                     nn.Linear(f4, f5),                   nn.ReLU(),
-        #                     nn.Linear(f5, k),
-        #                     )  
 
         f1 = state_dim
-        f2 = 16
-        f3 = 8
-        f4 = 8
-        f5 = 64
+        f2 = 32
+        f3 = 16
+        f4 = 16
+        self.k = k
 
 
         self.target =   nn.Sequential(
-                            nn.Linear(f1, f2),                   nn.ReLU(),
-                            nn.Linear(f2, f3),                   nn.ReLU(),
-                            nn.Linear(f3, f4),                   nn.ReLU(),
-                            nn.Linear(f4, k),                    nn.Softmax(0),
+                            nn.Linear(f1, f2),                   nn.Sigmoid(),
+                            nn.Linear(f2, f3),                   nn.Sigmoid(),
+                            nn.Linear(f3, f4),                   nn.Sigmoid(),
+                            nn.Linear(f4, k),                    nn.Sigmoid()
                             )  
 
         self.predictor = nn.Sequential(
-                            nn.Linear(f1, f2),                   nn.ReLU(),
-                            nn.Linear(f2, f3),                   nn.ReLU(),
-                            nn.Linear(f3, f4),                   nn.ReLU(),
-                            nn.Linear(f4, k),                   nn.Softmax(0),
-                            )  
+                            nn.Linear(f1, f2),                   nn.Sigmoid(),
+                            nn.Linear(f2, f3),                   nn.Sigmoid(),
+                            nn.Linear(f3, f4),                   nn.Sigmoid(),
+                            nn.Linear(f4, k),                    nn.Sigmoid()
+                            )   
 
 
         self.predictor.apply(weights_init)
@@ -174,7 +152,7 @@ class RND(nn.Module):
         to = self.target(x)
         po = self.predictor(x)
 
-        mse = (to - po).pow(2).sum(0)
+        mse = (to - po).pow(2).sum(0) / self.k * 2
 
         int_reward =  mse.detach().float().unsqueeze(0)
 

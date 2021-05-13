@@ -5,4 +5,8 @@ env/
 data/*
 checkpoints/*
 results/*
-logs/*
+log/*
+notebooks/*
+description/*
+specials/*
+
