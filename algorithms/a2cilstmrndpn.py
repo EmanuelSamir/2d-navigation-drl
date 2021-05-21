@@ -125,7 +125,7 @@ class A2CiLSTMRNDPNAgent:
                 # Reset
                 while not is_done:
                     # Feed Policy network
-                    probs, _, _, (hxn, cxn), _ = self.actor_critic((  t(state), (self.hx, self.cx) ))
+                    probs, _, _, (hxn, cxn), _ = self.actor_critic((  tn(state), (self.hx, self.cx) ))
 
                     # Choose sample accoding to policy
                     action_dist = torch.distributions.Categorical(probs = probs)
@@ -141,8 +141,8 @@ class A2CiLSTMRNDPNAgent:
 
                     
                     # Advantage 
-                    _, Qi, Qe, _, self.features_ns = self.actor_critic(( t(next_state), (hxn, cxn) ))
-                    _, Vi, Ve, _, _ = self.actor_critic(( t(state), (self.hx, self.cx) ))
+                    _, Qi, Qe, _, self.features_ns = self.actor_critic(( tn(next_state), (hxn, cxn) ))
+                    _, Vi, Ve, _, _ = self.actor_critic(( tn(state), (self.hx, self.cx) ))
 
                     _, _, int_reward = self.rnd(self.features_ns)
                     int_reward = torch.clamp(int_reward, min = 0, max = 8)
@@ -235,7 +235,9 @@ class A2CiLSTMRNDPNAgent:
 
         while not is_done:
             # Feed Policy network
-            probs, _, _, (hxn, cxn), features = self.actor_critic((  t(state), (self.hx, self.cx) ))
+            probs, _, _, (hxn, cxn), _ = self.actor_critic((  tn(state), (self.hx, self.cx) ))
+
+            #print('LSTM hxn mean {} std {} y cxn mean {} std {} '.format(torch.mean(hxn), torch.std(hxn), torch.mean(cxn), torch.std(cxn) ))
 
             # Choose sample accoding to policy
             action_dist = torch.distributions.Categorical(probs = probs)
@@ -247,11 +249,27 @@ class A2CiLSTMRNDPNAgent:
             else:
                 next_state, ext_reward, is_done, info = self.env.step(action_ix)
 
-            target_o, predictor_o, int_reward = self.rnd( features)
-            
-            int_reward = torch.clamp(int_reward, min = -5, max = 5)
+            _, Qi, Qe, _, self.features_ns = self.actor_critic(( tn(next_state), (hxn, cxn) ))
+            _, Vi, Ve, _, _ = self.actor_critic(( tn(state), (self.hx, self.cx) ))
 
-            #print('int rew: {}, ext rew : {} '.format(int_reward, ext_reward))
+            _, _, int_reward = self.rnd(self.features_ns)
+            
+            int_reward = torch.clamp(int_reward, min = 0, max = 8)
+
+            advantage_ext = ext_reward + (1-is_done)*(self.gamma * Qe) - Ve 
+            advantage_int = int_reward + (1-is_done)*(self.gamma_rnd * Qi) - Vi 
+
+            advantage = advantage_ext + advantage_int
+
+            print('int rew: {}, ext rew : {} '.format(int_reward, ext_reward))
+
+            value_loss = self.zeta * advantage.pow(2).mean() 
+            policy_loss = - action_dist.log_prob(action) * advantage.detach()
+
+            entropy_loss = - self.beta * (action_dist.log_prob(action) * probs).mean()
+            #print('log_action = {}, probs {}'.format(action_dist.log_prob(action), probs ) )
+            #print(' VL = {}, PL = {}, EL = {}'.format(value_loss, policy_loss, entropy_loss))
+            
 
             state = next_state
             self.hx = Variable(hxn.data)

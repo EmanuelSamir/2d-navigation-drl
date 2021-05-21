@@ -111,12 +111,12 @@ class ActorCritic(nn.Module):
 
 
 class RND(nn.Module):
-    def __init__(self, state_dim = 16, k = 16):
+    def __init__(self, state_dim = 16, k = 64):
         super(RND, self).__init__()      
         self.first = True
 
         f1 = state_dim
-        f2 = 32
+        f2 = 1024#512
         f3 = 16
         f4 = 16
         self.k = k
@@ -124,16 +124,12 @@ class RND(nn.Module):
 
         self.target =   nn.Sequential(
                             nn.Linear(f1, f2),                   nn.Sigmoid(),
-                            nn.Linear(f2, f3),                   nn.Sigmoid(),
-                            nn.Linear(f3, f4),                   nn.Sigmoid(),
-                            nn.Linear(f4, k),                    nn.Sigmoid()
+                            nn.Linear(f2, k),                    nn.Sigmoid()
                             )  
 
         self.predictor = nn.Sequential(
                             nn.Linear(f1, f2),                   nn.Sigmoid(),
-                            nn.Linear(f2, f3),                   nn.Sigmoid(),
-                            nn.Linear(f3, f4),                   nn.Sigmoid(),
-                            nn.Linear(f4, k),                    nn.Sigmoid()
+                            nn.Linear(f2, k),                    nn.Sigmoid()
                             )   
 
 

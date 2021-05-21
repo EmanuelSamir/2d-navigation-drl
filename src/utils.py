@@ -7,7 +7,7 @@ import os
 from collections import deque, namedtuple
 
 
-def t(x): return torch.from_numpy(x).float()
+def tn(x): return torch.from_numpy(x).float()
 
 def n(x): return x.detach().float()
 
@@ -161,5 +161,5 @@ class RunningFixed:
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find('Linear') != -1:
-        m.weight.data.normal_(0.0, 1.0)
+        m.weight.data.normal_(0.0, 5.0)
         m.bias.data.fill_(0)
