@@ -5,9 +5,9 @@ from src.utils import *
 class SimplePointNet(nn.Module):
     def __init__(self, in_channels = 2, feature_num = 64):
         super(SimplePointNet, self).__init__()
-        c1 = 64
-        c2 = 128
-        c3 = 256
+        c1 = 16
+        c2 = 32
+        c3 = 64
         f1 = feature_num
 
 
@@ -42,14 +42,14 @@ class ActorCritic(nn.Module):
     def __init__(self, state_dim, action_dim):
         super(ActorCritic, self).__init__()
         
-        sp = 256
+        sp = 64
 
-        g1 = 16
-        g2 = 32
+        g1 = 8
+        g2 = 8
 
-        f1 = 512
-        hh = 512
-        f2 = 128
+        f1 = 128
+        hh = 128
+        f2 = 64
         f3 = 64
 
         f4 = 16
@@ -107,7 +107,7 @@ class ActorCritic(nn.Module):
         z = hx.squeeze()
         z = self.net_post(z)
 
-        return self.net_actor(z), self.net_critic_int(z), self.net_critic_ext(z), (hx, cx), net_input.detach()
+        return self.net_actor(z), self.net_critic_int(z), self.net_critic_ext(z), (hx, cx), pose.detach()
 
 
 class RND(nn.Module):

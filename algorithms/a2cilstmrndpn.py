@@ -64,7 +64,7 @@ class A2CiLSTMRNDPNAgent:
         self.load_models(load_model_fn)
 
         # RND - Curious Module
-        self.rnd = RND(state_dim=288) # 256 + 32
+        self.rnd = RND(state_dim=8) # 256 + 32
         self.rnd_optimizer = torch.optim.Adam(self.rnd.predictor.parameters(), lr = self.lr_rnd )
         self.features_ns = None
 
@@ -116,8 +116,8 @@ class A2CiLSTMRNDPNAgent:
                 self.episode = episode
 
                 # LSTM
-                self.hx = Variable(torch.zeros(1, 512))
-                self.cx = Variable(torch.zeros(1, 512))
+                self.hx = Variable(torch.zeros(1, 128))
+                self.cx = Variable(torch.zeros(1, 128))
 
                 # Env
                 steps = 0
@@ -230,8 +230,8 @@ class A2CiLSTMRNDPNAgent:
         # Reset environment
         state = self.env.reset()
         is_done = False
-        self.hx = Variable(torch.zeros(1, 512))
-        self.cx = Variable(torch.zeros(1, 512))
+        self.hx = Variable(torch.zeros(1, 128))
+        self.cx = Variable(torch.zeros(1, 128))
 
         while not is_done:
             # Feed Policy network

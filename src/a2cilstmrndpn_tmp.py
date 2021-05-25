@@ -32,14 +32,14 @@ gamma_lst = [0.999]
 
 # Mejor caso fue para 0.99, deberia ser 0.999
 
-trained = False
+trained = True
 
 if trained:
     for lr in lr_lst:
         for gamma in gamma_lst:
-            #fn = '_0518_13-22-21/e=350_ri=0.7745187282562256_re=20_steps=1.pth'
-            agent = A2CiLSTMRNDPNAgent(env, state_dim, action_dim, actions, 300, lr = lr, gamma=gamma, intrinsic_set=True)#, load_model_fn = fn)
-            agent.train('Switching off no motion death. Improved a little bit RND. Short eps to see progress. Than switch to different gammas.')
+            fn = '_0524_11-32-38/tmp_model.pth'
+            agent = A2CiLSTMRNDPNAgent(env, state_dim, action_dim, actions, 2000, lr = lr, gamma=gamma, intrinsic_set=True)#, load_model_fn = fn)
+            agent.train('Middle size neural networks with intrinsic. Changed to obs only based on pose.')
 
 else:
     # path = '../checkpoints/A2CiLSTMRNDPN/model/'
@@ -50,6 +50,6 @@ else:
         for gamma in gamma_lst:
             #fn = '_0514_01-22-57/best_e=1899_ri=0_re=201.0_steps=402.pth'
             #fn = '_0519_01-05-52/e=1150_ri=25.208454132080078_re=177.0_steps=402.pth'
-            fn = '_0519_01-05-52/best_e=741_ri=127.4883041381836_re=186.0_steps=402.pth'
+            fn = '_0523_10-02-24/best_e=740_ri=0_re=201.0_steps=402.pth'
             agent = A2CiLSTMRNDPNAgent(env, state_dim, action_dim, actions, 1000, lr = lr, gamma=gamma, load_model_fn = fn, trial = True)
             agent.test()
