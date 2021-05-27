@@ -27,19 +27,22 @@ actions =       [
 action_dim = 3
 
 #lr_lst = [1e-3, 1e-4, 1e-5]
-lr_lst = [1e-5]
+lr_lst = [1e-4]
 gamma_lst = [0.999]
 
 # Mejor caso fue para 0.99, deberia ser 0.999
 
 trained = True
 
+sets = [True, False]
+
 if trained:
     for lr in lr_lst:
         for gamma in gamma_lst:
-            fn = '_0524_11-32-38/tmp_model.pth'
-            agent = A2CiLSTMRNDPNAgent(env, state_dim, action_dim, actions, 2000, lr = lr, gamma=gamma, intrinsic_set=True)#, load_model_fn = fn)
-            agent.train('Middle size neural networks with intrinsic. Changed to obs only based on pose.')
+            #for set in sets:
+            fn = '_0526_01-37-31/best_e=876_ri=310.7063903808594_re=198.0_steps=402.pth'
+            agent = A2CiLSTMRNDPNAgent(env, state_dim, action_dim, actions, 50, lr = lr, gamma=gamma, intrinsic_set=True, load_model_fn = fn)
+            agent.train('For tuning.')
 
 else:
     # path = '../checkpoints/A2CiLSTMRNDPN/model/'
@@ -50,6 +53,6 @@ else:
         for gamma in gamma_lst:
             #fn = '_0514_01-22-57/best_e=1899_ri=0_re=201.0_steps=402.pth'
             #fn = '_0519_01-05-52/e=1150_ri=25.208454132080078_re=177.0_steps=402.pth'
-            fn = '_0523_10-02-24/best_e=740_ri=0_re=201.0_steps=402.pth'
+            fn = '_0526_01-37-31/best_e=876_ri=310.7063903808594_re=198.0_steps=402.pth'
             agent = A2CiLSTMRNDPNAgent(env, state_dim, action_dim, actions, 1000, lr = lr, gamma=gamma, load_model_fn = fn, trial = True)
             agent.test()

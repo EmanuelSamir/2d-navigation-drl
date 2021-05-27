@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import os
+import os, yaml, io
 import pickle
 from torch import save as tsave
 import torch
@@ -109,7 +109,12 @@ class Logger:
                              gamma,
                              model,
                              rnd,
-                             actions):
+                             actions,
+                             old_fn):
+
+        model_graph = model.__repr__().split('\n')
+        rnd_graph = rnd.__repr__().split('\n')
+
 
         description = {
             'comment': comment,
@@ -119,16 +124,17 @@ class Logger:
             'beta': beta,
             'eps': eps,
             'gamma': gamma,
-            'actor_critic_graph' : model.state_dict(),
-            'rnd_graph' : rnd.state_dict(),
-            'actions': actions, 
-            'date':  datetime.now().strftime("%d%m%Y_%H-%M-%S")
-            #'old': old_fn
+            'actor_critic_graph' : model_graph,
+            'rnd_graph' : rnd_graph,
+            #'actions': actions, 
+            'date':  datetime.now().strftime("%d%m%Y_%H-%M-%S"),
+            'old': old_fn
           }
 
+        fn = os.path.join(self.save_description_path, 'description.yaml' )
 
-        fn = os.path.join(self.save_description_path, 'description.pth' )
-        torch.save(description, fn)
+        with io.open(fn, 'w', encoding='utf8') as outfile:
+            yaml.dump(description, outfile, default_flow_style=False, allow_unicode=True)
 
 
     def update(self, action,
@@ -159,11 +165,7 @@ class Logger:
         self._steps_accummulative.append(self.steps)
         
 
-        # Log
-        if self.save_checkpoints and self.episode % self.checkpoint_every == 0 and self.episode != 0:
-            self.save_data(self.episode, model, rnd)
-
-        # Checkpoints
+        # Checkpoints and Log
         if self.save_checkpoints and self.episode % self.checkpoint_every == 0 and self.episode != 0:
             fn = "e={}_ri={}_re={}_steps={}.pth".format(self.episode, 
                                                         np.sum(self._intrinsic_rewards), 
@@ -173,7 +175,7 @@ class Logger:
             checkpoint_path = os.path.join( self.save_model_path, fn)
 
             self.save_model(self.episode, model, optimizer, checkpoint_path )
-            self.save_data(self.episode, model, rnd)
+            self.save_data(self.episode, model, rnd, fn)
         
         reward = np.sum(self._intrinsic_rewards) + np.sum(self._extrinsic_rewards)
 
@@ -188,6 +190,7 @@ class Logger:
                 checkpoint_path = os.path.join( self.save_model_path, fn)
 
                 self.save_model(self.episode, model, optimizer, checkpoint_path)
+                self.save_data(self.episode, model, rnd, fn)
 
         # Flush
         self._actions = []
@@ -210,7 +213,7 @@ class Logger:
 
         torch.save(checkpoint, fn_model)
 
-    def save_data(self, episode, model, rnd):
+    def save_data(self, episode, model, rnd, fn):
         self.tb.add_histogram('actions', torch.tensor(self._actions), episode)
         self.tb.add_histogram('policy_loss', torch.stack(self._policy_losses), episode)
         self.tb.add_histogram('entropy_loss', torch.stack(self._entropy_losses), episode)
@@ -222,6 +225,21 @@ class Logger:
 
         for name, weight in rnd.named_parameters():
             self.tb.add_histogram(name, weight, episode)
+
+        for step in range(len(self._intrinsic_rewards)):
+            self.tb.add_scalar('intrinsic_rewards_' + fn, self._intrinsic_rewards[step], step)
+
+        for step in range(len(self._extrinsic_rewards)):
+            self.tb.add_scalar('extrinsic_rewards_' + fn, self._extrinsic_rewards[step], step)
+
+        for step in range(len(self._policy_losses)):
+            self.tb.add_scalar('policy_losses_' + fn, self._policy_losses[step], step)
+
+        for step in range(len(self._entropy_losses)):
+            self.tb.add_scalar('entropy_losses_' + fn, self._entropy_losses[step], step)
+
+        for step in range(len(self._value_losses)):
+            self.tb.add_scalar('value_losses_' + fn, self._value_losses[step], step)
 
 
     def close(self):

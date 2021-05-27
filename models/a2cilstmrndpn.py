@@ -111,12 +111,12 @@ class ActorCritic(nn.Module):
 
 
 class RND(nn.Module):
-    def __init__(self, state_dim = 16, k = 64):
+    def __init__(self, state_dim = 16, k = 16):
         super(RND, self).__init__()      
         self.first = True
 
         f1 = state_dim
-        f2 = 1024#512
+        f2 = 128
         f3 = 16
         f4 = 16
         self.k = k

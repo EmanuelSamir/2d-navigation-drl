@@ -47,6 +47,7 @@ class A2CiLSTMRNDPNAgent:
         self.zeta = zeta
         self.beta = beta
         self.n_opt = n_opt
+        self.load_model_fn = load_model_fn
 
         self.episode = 0
         
@@ -76,7 +77,7 @@ class A2CiLSTMRNDPNAgent:
                                 self.save_checkpoints,
                                 self.checkpoint_every)
 
-        # self.logger_special = LoggerSpecial("A2CiLSTMRNDPN")
+        self.logger_special = LoggerSpecial("A2CiLSTMRNDPN")
 
 
     def load_models(self, model_fn = None):
@@ -103,9 +104,10 @@ class A2CiLSTMRNDPNAgent:
                                             self.gamma,
                                             self.actor_critic,
                                             self.rnd,
-                                            self.actions)
+                                            self.actions,
+                                            self.load_model_fn)
 
-        # self.logger_special.set_description(comment)
+        self.logger_special.set_description(comment)
 
         try:
             for episode in range(self.n_episodes):
@@ -169,7 +171,7 @@ class A2CiLSTMRNDPNAgent:
                                             ent_loss,
                                             pi_loss)
 
-                    # self.logger_special.update(steps, self.features_ns.tolist())
+                    self.logger_special.update(steps, self.features_ns.tolist())
 
                     # Env update
                     state = next_state
@@ -182,7 +184,7 @@ class A2CiLSTMRNDPNAgent:
                 self.rnd.reset()
                 if not self.trial:
                     self.logger.consolidate(steps, self.episode, self.actor_critic, self.actor_critic_optimizer, self.rnd)
-                # self.logger_special.consolidate(episode)
+                self.logger_special.consolidate(episode)
                 pbar.update()
             
             if not self.trial:
